@@ -156,7 +156,16 @@ footer{text-align:center;color:var(--ink-soft);font-size:17px;line-height:1.6;ma
   .box textarea{height:auto;min-height:92px;resize:vertical}
   .card .stub{min-height:0}
 }
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@keyframes softpulse{0%,100%{opacity:1}50%{opacity:.34}}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  /* Everything that MOVES stays off: the rolling grid, the button's pulse, the deal.
+     The empty-slot signal is not decoration, it is the page telling you a card is
+     missing, so it survives as an opacity fade only -- no motion, slower and
+     shallower than the arcade blink. */
+  .slot.empty{animation:softpulse 2.2s ease-in-out infinite!important}
+  .box.empty::after{animation:softpulse 2.2s ease-in-out infinite!important}
+}
 </style>
 
 <div class="sky" aria-hidden="true"></div>
