@@ -95,11 +95,14 @@ h1{font-family:var(--display);font-weight:900;font-size:clamp(26px,6.6vw,68px);l
 .slot.a-magenta{color:var(--magenta-ink)}
 .slot.a-cyan{color:var(--cyan-ink)}
 .slot.a-gold{color:var(--gold-ink)}
+@keyframes blink{0%,54%{opacity:1}55%,100%{opacity:.14}}
+@keyframes lightup{from{opacity:.2;filter:brightness(2.2)}to{opacity:1;filter:none}}
+.slot.fresh{animation:lightup .5s ease-out both}
+/* an empty slot always blinks: this rule sits after .slot.fresh on purpose, so a
+   slot that was dealt and then cleared goes back to blinking instead of holding
+   the last frame of the deal animation */
 .slot.empty{font-family:var(--display);font-weight:700;letter-spacing:.16em;color:var(--accent-ink);
   animation:blink 1.05s steps(1,end) infinite}
-@keyframes blink{0%,54%{opacity:1}55%,100%{opacity:.14}}
-.slot.fresh{animation:lightup .5s ease-out both}
-@keyframes lightup{from{opacity:.2;filter:brightness(2.2)}to{opacity:1;filter:none}}
 
 .deal{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;align-items:stretch}
 .card{display:flex;flex-direction:column;gap:11px}
@@ -451,6 +454,7 @@ function render(){
     d.out.textContent = text || "[ ? ? ? ]";
     d.out.classList.toggle("empty", !text);
     d.box.classList.toggle("empty", !text);
+    if(!text) d.out.classList.remove("fresh");
   });
   $("#hudCount").textContent = String(scenario).padStart(3, "0");
 }
@@ -489,5 +493,7 @@ if(MUSCLE){
     " <em>Only cards trained on this muscle are in the decks.</em>";
 }
 
-deal(DECKS);
+/* Attract mode: the page arrives with nothing selected, all three slots blinking,
+   and the big button pulsing. Swap this line for deal(DECKS) to deal on load. */
+render();
 </script>
