@@ -1,0 +1,493 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Facilitation Multigym</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Chakra+Petch:wght@400;500;600&display=swap">
+<style>
+:root{
+  /* OutRun daylight: pale sky, warm sand, neon signage. Text is deep indigo, never a tint of the ground. */
+  --sand:#FBF0DC;          /* page ground */
+  --sky1:#BFE9FF;          /* sky, top */
+  --sky2:#FFC9A8;          /* sky, near horizon */
+  --panel:rgba(255,252,246,.88);
+  --ink:#1E0B45;           /* primary text on light */
+  --ink-soft:#584680;      /* secondary text on light */
+  --line:rgba(30,11,69,.22);
+
+  /* neon, for borders, rules and fills */
+  --magenta:#FF2E97;
+  --cyan:#17C8F0;
+  --gold:#FFC01E;
+  --coral:#FF5C39;
+  /* the same three, darkened enough to be read as text on the panels */
+  --magenta-ink:#C0126B;
+  --cyan-ink:#0A6E92;
+  --gold-ink:#8A5A00;
+  --violet:#3B1178;
+
+  --display:'Orbitron',ui-monospace,monospace;
+  --body:'Chakra Petch',ui-sans-serif,system-ui,sans-serif;
+}
+html{scroll-behavior:smooth}
+*{box-sizing:border-box}
+body{margin:0;background:var(--sand);color:var(--ink);font-family:var(--body);
+  font-size:19px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+/* the horizon: dusk sky, banded sun, rolling grid */
+.sky{position:fixed;inset:0;z-index:-3;background:linear-gradient(180deg,
+  var(--sky1) 0%,#D8ECFF 26%,#FFE0C4 46%,var(--sky2) 56%,#FFB9A0 58.6%,var(--sand) 59%,var(--sand) 100%)}
+.sun{position:fixed;left:50%;bottom:41%;transform:translateX(-50%);z-index:-2;
+  width:min(330px,42vw,34vh);aspect-ratio:1;border-radius:50%;opacity:.95;
+  background:repeating-linear-gradient(180deg,rgba(255,240,220,0) 0 13px,rgba(255,247,232,.75) 13px 17px),
+    linear-gradient(180deg,#FFE68A 0%,var(--gold) 30%,#FF9752 60%,var(--coral) 100%);
+  filter:drop-shadow(0 0 70px rgba(255,150,90,.45))}
+.grid{position:fixed;left:-50%;right:-50%;top:59%;bottom:-10%;z-index:-1;
+  background-image:repeating-linear-gradient(90deg,rgba(192,18,107,.34) 0 2px,transparent 2px 78px),
+    repeating-linear-gradient(0deg,rgba(10,110,146,.34) 0 2px,transparent 2px 58px);
+  transform:perspective(340px) rotateX(76deg);transform-origin:top center;
+  animation:roll 2.6s linear infinite;
+  -webkit-mask-image:linear-gradient(180deg,transparent,#000 22%,#000 62%,transparent);
+  mask-image:linear-gradient(180deg,transparent,#000 22%,#000 62%,transparent)}
+@keyframes roll{from{background-position:0 0,0 0}to{background-position:0 0,0 58px}}
+
+.cab{max-width:1140px;margin:0 auto;padding:20px 18px 96px;display:flex;flex-direction:column;gap:34px}
+
+.hud{display:flex;flex-wrap:wrap;gap:9px 24px;justify-content:space-between;align-items:center;
+  border:2px solid var(--cyan);padding:10px 14px;font-family:var(--display);font-weight:700;
+  font-size:10px;letter-spacing:.14em;color:var(--cyan-ink);background:var(--panel);
+  box-shadow:0 3px 0 rgba(30,11,69,.16)}
+.hud b{font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.hud .mg{color:var(--magenta-ink)}
+
+header{text-align:center;display:flex;flex-direction:column;gap:16px;padding-top:6px}
+h1{font-family:var(--display);font-weight:900;font-size:clamp(26px,6.6vw,68px);line-height:1.08;
+  letter-spacing:.02em;margin:0;text-wrap:balance;
+  background:repeating-linear-gradient(180deg,rgba(0,0,0,0) 0 10px,rgba(59,17,120,.22) 10px 12px),
+    linear-gradient(180deg,#FFE07A 2%,var(--gold) 26%,#FF7A2F 58%,#E5225F 88%,#B8158C 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  -webkit-text-stroke:2.5px var(--violet);paint-order:stroke fill;
+  filter:drop-shadow(0 4px 0 rgba(30,11,69,.5))}
+.sub{font-family:var(--display);font-weight:700;font-size:clamp(9px,1.6vw,12px);letter-spacing:.16em;
+  color:var(--violet);margin:0}
+.lede{margin:0 auto;max-width:62ch;color:var(--ink);font-size:19px;font-weight:500;
+  background:rgba(255,252,246,.72);padding:8px 14px;border-radius:2px}
+#muscleNote{margin:0 auto;max-width:72ch;color:var(--ink);font-size:19px;
+  border:1px solid var(--line);border-left:4px solid var(--gold);padding:16px 20px;
+  background:var(--panel);text-align:left}
+#muscleNote b{font-family:var(--display);font-weight:900;font-size:14px;letter-spacing:.1em;color:var(--gold-ink);
+  display:block;margin-bottom:8px}
+#muscleNote em{color:var(--ink-soft);font-style:normal;display:block;margin-top:10px;font-size:17px}
+
+.panel{border:2px solid var(--line);background:var(--panel);position:relative;
+  padding:28px 20px 22px;backdrop-filter:blur(2px);box-shadow:0 3px 0 rgba(30,11,69,.14)}
+.panel>.cap{position:absolute;top:-10px;left:18px;background:var(--sand);padding:0 10px;
+  font-family:var(--display);font-weight:700;font-size:9px;letter-spacing:.18em;color:var(--ink-soft)}
+.panel.tint{border-color:var(--accent);box-shadow:0 3px 0 var(--glow)}
+.panel.tint>.cap{color:var(--accent-ink)}
+.a-magenta{--accent:var(--magenta);--accent-ink:var(--magenta-ink);--ink-on:#FFF3F9;--glow:rgba(192,18,107,.28)}
+.a-cyan{--accent:var(--cyan);--accent-ink:var(--cyan-ink);--ink-on:#F2FDFF;--glow:rgba(10,110,146,.28)}
+.a-gold{--accent:var(--gold);--accent-ink:var(--gold-ink);--ink-on:#241300;--glow:rgba(138,90,0,.26)}
+.a-coral{--accent:var(--coral);--accent-ink:#B93A17;--ink-on:#FFF4F0;--glow:rgba(185,58,23,.28)}
+
+.prompt{font-size:clamp(21px,2.5vw,30px);line-height:1.62;margin:0}
+.slot{font-weight:600}
+.slot.a-magenta{color:var(--magenta-ink)}
+.slot.a-cyan{color:var(--cyan-ink)}
+.slot.a-gold{color:var(--gold-ink)}
+.slot.empty{font-family:var(--display);font-weight:700;letter-spacing:.16em;color:var(--accent-ink);
+  animation:blink 1.05s steps(1,end) infinite}
+@keyframes blink{0%,54%{opacity:1}55%,100%{opacity:.14}}
+.slot.fresh{animation:lightup .5s ease-out both}
+@keyframes lightup{from{opacity:.2;filter:brightness(2.2)}to{opacity:1;filter:none}}
+
+.deal{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;align-items:stretch}
+.card{display:flex;flex-direction:column;gap:11px}
+.card .who{font-family:var(--display);font-weight:700;font-size:10px;letter-spacing:.16em;color:var(--accent-ink)}
+.card .stub{color:var(--ink-soft);font-size:16px;margin:0;min-height:24px}
+.box{position:relative;flex:1}
+.box textarea{width:100%;height:132px;background:transparent;border:0;resize:none;color:var(--ink);
+  font-family:var(--body);font-size:20px;line-height:1.4;padding:2px 0;overflow:auto}
+.box textarea:focus{outline:2px solid var(--violet);outline-offset:6px}
+.box.empty::after{content:"";position:absolute;left:0;top:4px;width:.6em;height:1.2em;
+  background:var(--accent-ink);
+  animation:blink 1.05s steps(1,end) infinite;pointer-events:none}
+.box.empty:focus-within::after{display:none}
+.card .btn{margin-top:auto}
+.dealt{animation:deal .42s cubic-bezier(.2,.85,.3,1) both}
+@keyframes deal{
+  from{opacity:0;transform:translateY(-10px);box-shadow:0 0 40px var(--glow),inset 0 0 26px var(--glow)}
+  to{opacity:1;transform:none;box-shadow:0 0 20px var(--glow)}
+}
+
+button{font-family:var(--display);font-weight:700;cursor:pointer;background:transparent;
+  border:2px solid currentColor;letter-spacing:.14em;transition:background .14s,color .14s,box-shadow .14s}
+button:focus-visible{outline:3px solid var(--violet);outline-offset:3px}
+.btn{font-size:11px;padding:14px 16px;color:var(--accent-ink);border-color:var(--accent);background:rgba(255,255,255,.5)}
+.btn:hover{background:var(--accent);color:var(--ink-on);border-color:var(--accent)}
+.controls{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:center}
+.btn.big{font-family:var(--display);font-weight:900;font-size:clamp(12px,2.1vw,16px);letter-spacing:.2em;
+  padding:20px 30px;color:#2A0A00;border:0;
+  background:linear-gradient(180deg,#FFD95E,var(--gold) 40%,var(--coral) 100%);
+  box-shadow:0 4px 0 var(--violet),0 0 26px rgba(255,92,57,.4);animation:pulse 2.1s ease-in-out infinite}
+.btn.big:hover{filter:brightness(1.08);box-shadow:0 4px 0 var(--violet),0 0 40px rgba(255,92,57,.6)}
+@keyframes pulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.2)}}
+.btn.ghost{color:var(--ink-soft);font-size:10px;padding:13px 15px;border-color:var(--line);background:rgba(255,255,255,.5)}
+.btn.ghost:hover{color:var(--ink);border-color:var(--ink);background:#fff}
+
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.step{display:flex;flex-direction:column;gap:8px}
+.step .n{font-family:var(--display);font-weight:700;font-size:11px;letter-spacing:.14em;color:var(--gold-ink)}
+.step p{margin:0;color:var(--ink-soft);font-size:19px}
+.channels{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:26px;
+  border-top:1px solid var(--line);padding-top:22px}
+.ch{display:flex;flex-direction:column;gap:6px}
+.ch .h{font-family:var(--display);font-weight:700;font-size:11px;letter-spacing:.14em;color:var(--violet)}
+.ch p{margin:0;color:var(--ink-soft);font-size:18px}
+footer{text-align:center;color:var(--ink-soft);font-size:17px;line-height:1.6;max-width:78ch;margin:0 auto}
+
+@media (max-width:880px){
+  .deal,.steps,.channels{grid-template-columns:1fr}
+  .panel{padding:18px 14px}
+  .panel>.cap{position:static;display:block;background:transparent;padding:0;margin:0 0 12px;line-height:1.6}
+  .box textarea{height:auto;min-height:92px;resize:vertical}
+  .card .stub{min-height:0}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="sky" aria-hidden="true"></div>
+<div class="sun" aria-hidden="true"></div>
+<div class="grid" aria-hidden="true"></div>
+
+<div class="cab">
+
+  <div class="hud">
+    <span>SCENARIO <b id="hudCount">001</b></span>
+    <span class="mg">DECKS <b id="hudDecks">&mdash;</b></span>
+    <span>COMBINATIONS <b id="hudCombos">&mdash;</b></span>
+    <span class="a-gold" id="hudMuscle" hidden style="color:var(--gold-ink)">MUSCLE <b id="hudMuscleName">&mdash;</b></span>
+    <span style="color:var(--magenta-ink)">&#9733; INSERT PRACTICE &#9733;</span>
+  </div>
+
+  <header>
+    <h1>FACILITATION MULTIGYM</h1>
+    <p class="sub">&#9654; ELEVEN MUSCLES TO MAXIMIZE YOUR IMPACT &middot; DRAW 3 CARDS &#9654;</p>
+    <p class="lede">Best worked with a partner. Draw a hand, then argue about what it actually does &mdash; to them, or to you.</p>
+    <p id="muscleNote" hidden></p>
+  </header>
+
+  <section class="panel tint a-coral">
+    <span class="cap">&#9733; THE SCENARIO &#9733;</span>
+    <p class="prompt" aria-live="polite">When <span class="slot a-magenta empty" id="sg">[ ? ? ? ]</span>, and you <span class="slot a-cyan empty" id="sf">[ ? ? ? ]</span>, trace the impact on <span class="slot a-gold empty" id="si">[ ? ? ? ]</span>.</p>
+  </section>
+
+  <section class="deal">
+    <div class="panel tint a-magenta card">
+      <span class="cap">CARD 1</span>
+      <span class="who">THE GROUP</span>
+      <p class="stub">When&hellip;</p>
+      <div class="box empty" id="boxG"><textarea id="txtG" rows="3" aria-label="What the group does"></textarea></div>
+      <button class="btn" id="rollG" aria-label="Draw a group card">&#9654; DRAW</button>
+    </div>
+
+    <div class="panel tint a-cyan card">
+      <span class="cap">CARD 2</span>
+      <span class="who">THE FACILITATOR</span>
+      <p class="stub">and you&hellip;</p>
+      <div class="box empty" id="boxF"><textarea id="txtF" rows="3" aria-label="What the facilitator does"></textarea></div>
+      <button class="btn" id="rollF" aria-label="Draw a facilitator card">&#9654; DRAW</button>
+    </div>
+
+    <div class="panel tint a-gold card">
+      <span class="cap">CARD 3</span>
+      <span class="who">THE IMPACT</span>
+      <p class="stub">trace the impact on&hellip;</p>
+      <div class="box empty" id="boxI"><textarea id="txtI" rows="3" aria-label="Which impact to trace"></textarea></div>
+      <button class="btn" id="rollI" aria-label="Draw an impact card">&#9654; DRAW</button>
+    </div>
+  </section>
+
+  <section class="controls">
+    <button class="btn big" id="rollAll">&#9654;&#9654; DRAW ALL THREE &nbsp;[G]</button>
+    <button class="btn ghost" id="clear">&#10005; CLEAR</button>
+  </section>
+
+  <section class="panel">
+    <span class="cap">&#9733; THE EXERCISE &#9733;</span>
+    <div class="steps">
+      <div class="step"><span class="n">1 &#9654; CONVERSATION</span><p>Talk the hand through before you write anything down. What would you actually see, hear and feel in that room? Disagreement about that is the exercise.</p></div>
+      <div class="step"><span class="n">2 &#9654; JOURNEY</span><p>Keep the first two cards and draw a new impact three times. Same moment, three places to look. Then keep the group card and re-draw the move instead.</p></div>
+      <div class="step"><span class="n">3 &#9654; REFLECTION</span><p>Ask it twice: how does this land in the room, and how does it read two weeks later? A move that scores well now and thin later is worth a second look.</p></div>
+    </div>
+    <div class="channels">
+      <div class="ch"><span class="h">&#9670; HEAD</span><p>Cognitive. Thoughts, beliefs, the rule they infer about what is allowed here. Limiting or enabling.</p></div>
+      <div class="ch"><span class="h">&#9650; HEART</span><p>Affective. Feelings, and their price. Confidence, calm and readiness give energy back; worry, fear and watchfulness cost more than they give.</p></div>
+      <div class="ch"><span class="h">&#9679; HANDS</span><p>Behavioural. What they do next and what they stop doing. Speak or wait, look away, avoid the group, avoid naming the thing.</p></div>
+    </div>
+  </section>
+
+  <footer>
+    <p>The Facilitation Gym &mdash; eleven facilitation muscles, in development. Arcade inspiration gratefully borrowed from Future Tinkering by the L&amp;D Shakers (Nina, Sara, Eugenia, Ariel).</p>
+  </footer>
+</div>
+
+<script>
+"use strict";
+
+const GROUP = [
+ ["two people carry the conversation and three have not spoken", "LEAD"],
+ ["the group agrees warmly with everything, at no cost to anyone", "CHALLENGE"],
+ ["nobody answers for forty seconds", "HOLD"],
+ ["one person stops writing and two chairs move slightly apart", "SENSE"],
+ ["someone asks halfway through what this is actually for", "FRAME"],
+ ["they check with you before every obvious next step", "SUPPORT"],
+ ["a group has been stuck for six minutes and has not asked for help", "SUPPORT"],
+ ["two participants open a real conflict and the room goes still", "HOLD"],
+ ["someone says they do not do games", "FRAME"],
+ ["they keep circling back to a topic that is not on the plan", "SENSE"],
+ ["they ask for ten more minutes on something that is working", "ADAPT"],
+ ["they have six decent threads and want to keep all six", "DECIDE"],
+ ["the first three ideas are safe and small", "ENCOURAGE"],
+ ["one person speaks first every round and the others now wait", "LEAD"],
+ ["the activity fails and several people are embarrassed", "DISCOVER"],
+ ["they blame the rules for their result, accurately", "CHALLENGE"],
+ ["someone asks you what the right answer would have been", "DISCOVER"],
+ ["everyone said it was clear and two groups are doing something else", "FRAME"],
+ ["someone says, upset, that your set-up was the problem", "HOLD"],
+ ["someone says something confidently wrong and nobody objects", "CHALLENGE"],
+ ["the room goes quiet in a way you cannot read", "SENSE"],
+ ["laughter arrives late, always after the same person", "SENSE"],
+ ["someone offers an idea that will not work", "ENCOURAGE"],
+ ["they reopen a decision you closed twenty minutes ago", "DECIDE"],
+ ["everyone is writing, nobody is looking up", "ANTICIPATE"],
+ ["they look at you every time two of them disagree", "LEAD"],
+ ["someone volunteers a failure and the room goes awkward", "ENCOURAGE"],
+ ["phones come out, quietly and all at once", "SENSE"],
+ ["they finish ten minutes early and say it was fine", "CHALLENGE"],
+ ["two people talk over each other and neither backs down", "LEAD"],
+ ["they move fast toward a topic you did not design for", "ADAPT"],
+ ["nobody touches the material you prepared most carefully", "ANTICIPATE"],
+ ["one person answers every question within two seconds", "HOLD"],
+ /* Added 2026-08-27 from the podcast-evidence pass over 54 episodes.
+    Episode numbers only: practitioner names in that source are unverified against audio. */
+ ["they spend the first minutes securing the room, not starting", "ANTICIPATE"],  // ep 30
+ ["they tidy the workspace instead of changing the work", "DECIDE"],  // ep 33
+ ["the fastest ones cannot explain how they did it", "FRAME"],  // ep 12
+ ["everyone puts something back the way it was", "DISCOVER"],  // ep 13
+ ["they all say yes while one of them looks away", "CHALLENGE"],  // ep 12
+ ["the ones furthest from the middle have stopped contributing", "LEAD"],  // ep 12
+ ["someone asks whether they are allowed to break it", "ENCOURAGE"],  // ep 17
+ ["they optimise inside the rules and never test a rule", "CHALLENGE"],  // ep 8
+ ["the quietest person's idea is repeated later by someone else", "LEAD"],  // ep 12
+ ["the round ends and nothing is finished", "HOLD"],  // ep 7
+ ["one person has held the same role for three rounds", "SUPPORT"],  // ep 49
+ ["they ask for a glossary instead of an example", "FRAME"],  // ep 44
+ ["the person who normally decides has said nothing for ten minutes", "LEAD"],  // ep 43
+ ["two of them speed up and stop talking to each other", "SENSE"],  // ep 40
+];
+
+const FACIL = [
+ ["fill the silence at four seconds", "HOLD"],  // shadow
+ ["wait, hands still, for eight seconds", "HOLD"],  // trained
+ ["name what you see without interpreting it", "SENSE"],  // trained
+ ["name what you see and add why you think it happened", "SENSE"],  // shadow
+ ["give the hint before anyone asks for it", "SUPPORT"],  // shadow
+ ["ask what they have already tried, then step back", "SUPPORT"],  // trained
+ ["restate their point more crisply than they said it", "FRAME"],  // shadow
+ ["write their exact words up, including the awkward one", "FRAME"],  // trained
+ ["decide it yourself and say why, out loud", "DECIDE"],  // trained
+ ["leave the decision open and move on", "DECIDE"],  // shadow
+ ["change the plan without saying it changed", "ADAPT"],  // shadow
+ ["say what changes and what stays, before changing it", "ADAPT"],  // trained
+ ["ask the quietest third to write first, then read out", "ENCOURAGE"],  // trained
+ ["thank them and move briskly to the next idea", "ENCOURAGE"],  // shadow
+ ["tell a failure of your own", "ENCOURAGE"],  // trained
+ ["step between the two of them and smooth it", "HOLD"],  // shadow
+ ["say the room has gone still, then wait in it", "HOLD"],  // trained
+ ["ask what makes them sure, kindly", "CHALLENGE"],  // trained
+ ["correct the wrong statement yourself", "CHALLENGE"],  // shadow
+ ["ask a question you cannot answer yourself", "DISCOVER"],  // trained
+ ["answer their question fully and well", "DISCOVER"],  // shadow
+ ["hand the timekeeping over and leave it there", "LEAD"],  // trained
+ ["quietly take back a task you had given away", "LEAD"],  // shadow
+ ["explain the purpose again, at length", "FRAME"],  // shadow
+ ["ask three people what they think this is for", "FRAME"],  // trained
+ ["keep a contingency ready and do not mention it", "ANTICIPATE"],  // trained
+ ["warn them about a difficulty that has not happened", "ANTICIPATE"],  // shadow
+ ["check your phone while someone is speaking", "SENSE"],  // shadow
+ ["move away from the group and let them work", "SUPPORT"],  // trained
+ ["finish someone's sentence for them", "SUPPORT"],  // shadow
+ ["say you do not know and stop there", "DISCOVER"],  // trained
+ ["look at the person who agrees with you", "SENSE"],  // shadow
+ ["put the awkward sentence in your first ten words", "CHALLENGE"],  // trained
+ ["ask what else is true, before the first answer settles", "DISCOVER"],  // trained
+ ["add one more instruction to a clear task", "FRAME"],  // shadow
+ /* Added 2026-08-27 from the podcast-evidence pass, weighted to the five muscles
+    the deck was thinnest on: SUPPORT, ANTICIPATE, DECIDE, LEAD, CHALLENGE. */
+ ["extend the reflection because they seem to need it", "SUPPORT"],  // shadow, ep 8
+ ["re-read the rule, stressing one word", "SUPPORT"],  // trained, ep 33
+ ["wait until they ask, then answer only that", "SUPPORT"],  // trained, ep 53
+ ["carry the awkward part of the task yourself", "SUPPORT"],  // shadow, ep 8
+ ["put the stuck person in a named observer role", "SUPPORT"],  // trained, ep 22
+ ["keep the override in your pocket, unused", "ANTICIPATE"],  // trained, ep 17
+ ["set a time for each task and a signal for when it overruns", "ANTICIPATE"],  // trained, ep 17
+ ["plan the next minute while they are still in this one", "ANTICIPATE"],  // shadow, ep 25
+ ["remove the difficulty you built, before they reach it", "ANTICIPATE"],  // shadow, ep 33
+ ["say how this closes, before it opens", "DECIDE"],  // trained, ep 53
+ ["ask the ones who did not vote if they can move on", "DECIDE"],  // trained, ep 45
+ ["run the vote you already know the answer to", "DECIDE"],  // shadow, ep 45
+ ["let the loudest preference stand as the group's", "DECIDE"],  // shadow, ep 15
+ ["allow exactly one change and hold that line", "DECIDE"],  // trained, ep 33
+ ["say which hat you are wearing, out loud", "LEAD"],  // trained, ep 7
+ ["leave the room for ten minutes", "LEAD"],  // trained, ep 43
+ ["answer the question that was asked of the group", "LEAD"],  // shadow, ep 12
+ ["fill the pause with your own voice, again", "LEAD"],  // shadow, ep 12
+ ["ask them to show you, not tell you", "CHALLENGE"],  // trained, ep 12
+ ["make it a team task the moment one person is exposed", "CHALLENGE"],  // trained, ep 12
+ ["point at the numbers and let them do the maths", "CHALLENGE"],  // trained, ep 53
+ ["soften the question until it asks nothing", "CHALLENGE"],  // shadow, ep 12
+ ["ask what makes them sure, knowing they are wrong", "CHALLENGE"],  // shadow
+ ["tell them what they should have learned", "FRAME"],  // shadow, ep 35
+ ["say the debrief question before the game starts", "FRAME"],  // trained, ep 14
+ ["model the strangest version yourself, first", "ENCOURAGE"],  // trained, ep 49
+ ["take the break you need before deciding what is next", "ADAPT"],  // trained, ep 3
+ ["let it fail completely, then stop", "HOLD"],  // trained, ep 16
+ ["ask what stayed with them, before asking about the topic", "DISCOVER"],  // trained, ep 27
+];
+
+const IMPACT = [
+ "what the group now believes is allowed here",                              // group, head
+ "the rule they infer about who does the thinking",                          // group, head
+ "the story the quiet ones tell themselves",                                 // group, head
+ "whether they expect their words to survive your summary",                  // group, head
+ "the limiting belief this hardens or cracks",                               // group, head
+
+ "how much energy they spend reading your face",                             // group, heart
+ "whether the room feels safer, or only more comfortable",                   // group, heart
+ "the confidence of whoever just took a risk",                               // group, heart
+ "what they are relieved about",                                             // group, heart
+ "their energy after the next break",                                        // group, heart
+
+ "what they do next without being asked",                                    // group, hands
+ "who speaks next, and who stops trying",                                    // group, hands
+ "whether the next question goes to each other or to you",                   // group, hands
+ "what they stop doing for the rest of the day",                             // group, hands
+ "what they do differently on the Tuesday after",                            // group, hands
+
+ "the story you now tell yourself about this group",                         // you, head
+ "whether you still believe they can carry this",                            // you, head
+ "what you have decided the discomfort means",                               // you, head
+ "the belief about your role that this confirms",                            // you, head
+ "what you would have to admit if this went badly",                          // you, head
+
+ "the relief you feel, and what you bought it with",                         // you, heart
+ "how much you need this to go well",                                        // you, heart
+ "whether you are steadier, or only busier",                                 // you, heart
+ "the anxiety this move was designed to reduce",                             // you, heart
+ "what it costs you to hold this another twenty minutes",                    // you, heart
+
+ "how much you talk in the next twenty minutes",                             // you, hands
+ "what you avoid naming for the rest of the day",                            // you, hands
+ "the next thing you take back, or hand over",                               // you, hands
+ "whether you step in sooner next time, or later",                           // you, hands
+ "what you write down afterwards, and what you leave out"                    // you, hands
+];
+
+/* One muscle per hidden route: /hold, /lead, /frame and so on, or ?muscle=hold.
+   Anything else serves the full decks. Stance texts are the Gym's own card text, v3. */
+const DEFINITIONS = {
+ "SENSE": "Take in what is actually happening \u2014 in you, in others, in the room \u2014 before you decide what it means. Notice the signals people give off, including your own reaction, and hold what you see lightly instead of jumping to a story. Then say what you notice in plain words, without the verdict attached.",
+ "DECIDE": "Pick what happens next, say it out loud, and stand behind it. Say how the decision will be made before you make it, so people can accept the result even when it is not the one they wanted. Then close it, so the group moves instead of circling.",
+ "FRAME": "Say what is about to happen, why it matters, and how to start. Give people just enough to step in with confidence \u2014 then stop, so the meaning they find is theirs and not a repeat of yours. Point the attention before the experience, so there is something to say about it afterwards. Frame in both directions: bring their day-to-day into the room at the start, and name the bridge back out at the end.",
+ "SUPPORT": "Give people what they need to get moving \u2014 a structure, an example, a clarifying question, a word for the thing they cannot name, a hand. Then take it away as soon as they can carry it, so the help builds strength instead of dependence. What you are after is a group that supports itself, not one that needs you.",
+ "ENCOURAGE": "Invite people into the thing \u2014 to speak, try, lead, make. Keep the first step small enough that saying yes is easy, and go first yourself when it is not, with the odd idea as readily as the safe one. Name what someone actually did, rather than how great they are, so the confidence has something to stand on.",
+ "DISCOVER": "Go wider before you go forward. Draw out the perspectives, options and feelings that are not yet said \u2014 what is in the room, and what people carried in from their day-to-day. Say plainly that this is the diverging part \u2014 ideas now, decisions later \u2014 so nobody mistakes it for the deciding part.",
+ "CHALLENGE": "Go higher. Ask for the thinking behind the answer, name what is being stepped around, and raise the bar \u2014 because you believe this group can clear it. Say the hard thing, then stay in the room for what it stirs up. Not all of it is spoken: a look, a posture, where you stand can carry it.",
+ "HOLD": "Keep the space steady so people can take a risk inside it. Stay with what is here \u2014 the silence, the tension, the feeling \u2014 without rushing to fix it, fill it or steer it. Hold your own reaction too; your steadiness is the thing people borrow.",
+ "ANTICIPATE": "Look one step ahead and notice what is likely to come \u2014 where the energy will drop, where it will get stuck, what people's bodies will need before their mouths ask for it. Get ready early: prepare the material, adjust the timing, put the support within reach before it is asked for. Seeing something coming does not oblige you to prevent it.",
+ "LEAD": "Carry the process so the group does not have to \u2014 the purpose, the pace, the boundaries, whose turn it is, when the room needs to stand up. You do this with your presence, voice and body, not only with your plan. And you keep handing pieces of it back, so people lead alongside you instead of watching you.",
+ "ADAPT": "Change the method, the pace or the intensity to fit what you, the others and the situation actually need right now. Let go of the plan you prepared without letting go of what it was for. Say the change out loud, then move \u2014 no apology required."
+};
+function chosenMuscle(){
+  const fromPath = location.pathname.split("/").filter(Boolean).pop() || "";
+  const fromQuery = new URLSearchParams(location.search).get("muscle") || "";
+  const name = (fromQuery || fromPath).toUpperCase();
+  return DEFINITIONS[name] ? name : null;
+}
+const MUSCLE = chosenMuscle();
+const only = deck => MUSCLE ? deck.filter(card => card[1] === MUSCLE) : deck;
+
+const $ = s => document.querySelector(s);
+
+/* One row per deck: the cards, the box you edit, the slot it fills in the sentence,
+   and its DRAW button. Adding a fourth deck means adding a row. */
+const DECKS = [
+ [only(GROUP), "#txtG", "#sg", "#rollG", "#boxG"],
+ [only(FACIL), "#txtF", "#sf", "#rollF", "#boxF"],
+ [IMPACT,      "#txtI", "#si", "#rollI", "#boxI"]
+].map(([deck, txt, slot, btn, box]) => ({
+  deck, last: -1,
+  input: $(txt), out: $(slot), btn: $(btn), box: $(box), card: $(txt).closest(".card")
+}));
+
+let scenario = 0;
+
+function replay(node, cls){
+  node.classList.remove(cls);
+  void node.offsetWidth;
+  node.classList.add(cls);
+}
+function drawOne(d){
+  let x;
+  do { x = Math.floor(Math.random() * d.deck.length); } while(x === d.last && d.deck.length > 1);
+  d.last = x;
+  d.input.value = Array.isArray(d.deck[x]) ? d.deck[x][0] : d.deck[x];
+  replay(d.card, "dealt");
+}
+function render(){
+  DECKS.forEach(d => {
+    const text = d.input.value.trim();
+    d.out.textContent = text || "[ ? ? ? ]";
+    d.out.classList.toggle("empty", !text);
+    d.box.classList.toggle("empty", !text);
+  });
+  $("#hudCount").textContent = String(scenario).padStart(3, "0");
+}
+function deal(cards){
+  cards.forEach(drawOne);
+  scenario++;
+  render();
+  cards.forEach(d => replay(d.out, "fresh"));
+}
+
+DECKS.forEach(d => {
+  d.btn.addEventListener("click", () => deal([d]));
+  d.input.addEventListener("input", render);
+});
+$("#rollAll").addEventListener("click", () => deal(DECKS));
+$("#clear").addEventListener("click", () => {
+  DECKS.forEach(d => { d.input.value = ""; });
+  render();
+});
+document.addEventListener("keydown", e => {
+  if(e.metaKey || e.ctrlKey || e.altKey) return;
+  if(e.target instanceof Element && e.target.closest("textarea,input")) return;
+  if(e.key.toLowerCase() === "g"){ e.preventDefault(); deal(DECKS); }
+});
+
+$("#hudDecks").textContent = DECKS.map(d => d.deck.length).join("\u00d7");
+$("#hudCombos").textContent = DECKS.reduce((n, d) => n * d.deck.length, 1).toLocaleString("en-US");
+
+if(MUSCLE){
+  document.title = "Facilitation Multigym \u2014 " + MUSCLE;
+  $("#hudMuscle").hidden = false;
+  $("#hudMuscleName").textContent = MUSCLE;
+  const note = $("#muscleNote");
+  note.hidden = false;
+  note.innerHTML = "<b>" + MUSCLE + "</b>" + DEFINITIONS[MUSCLE] +
+    " <em>Only cards trained on this muscle are in the decks.</em>";
+}
+
+deal(DECKS);
+</script>

@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/:muscle(sense|decide|frame|support|encourage|discover|challenge|hold|anticipate|lead|adapt)",
+      "destination": "/index.html"
+    }
+  ]
+}
